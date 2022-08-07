@@ -10,7 +10,7 @@ contract CryptoDevToken is Ownable, ERC20{
 
     uint256 public constant cryptoDevsTokePrice = 0.001 ether;
     uint256 public tokenpernft = 10 * 10**18 ;
-    uint256 public maxTokenSupply = 1000 * 10**18;
+    uint256 public maxTotalSupply = 10000 * 10**18;
 
     ICryptoDevs cryptoDevsNft;
     mapping(uint256 => bool) public tokenIsClaimed;
@@ -49,7 +49,7 @@ contract CryptoDevToken is Ownable, ERC20{
         uint256 _requiredAmount = cryptoDevsTokePrice * amount;
         require(msg.value >= _requiredAmount , "Ether sent is insufficient");
         uint256 amountInDecimals = amount * 10**18; 
-        require(totalSupply() + amountInDecimals < maxTokenSupply , "Max number of tokens already minted");
+        require(totalSupply() + amountInDecimals < maxTotalSupply , "Max number of tokens already minted");
         _mint(msg.sender , amountInDecimals); 
     }
 

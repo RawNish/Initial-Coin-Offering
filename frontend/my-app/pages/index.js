@@ -10,6 +10,7 @@ import { TOKEN_CONTRACT_ADDRESS,
          NFT_TOKEN_ABI
 } from '../constants'
 
+
 export default function Home() {
   const[walletConnected,setWalletConnected] = useState(false);
   const[totalTokensMinted,setTotalTokensMinted]= useState(0);
@@ -31,7 +32,7 @@ export default function Home() {
       window.alert("Change the network to rinkeby");
 
      }
-
+     console.log(chainId);
      const signer  = web3Provider.getSigner();
      if(needSigner==true){
       return signer;
@@ -40,19 +41,19 @@ export default function Home() {
   }
 
 // ye wala function poora karna hai muje
-//this is the getNoOfToken minted
+  //this is the getNoOfToken minted for getting the total number of tokens that have been minted
 
-  // const getNoOfTokensMinted =async()=>{
-  //   const provider = await getProviderOrSigner();
-  //   const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS,TOKEN_CONTRACT_ABI,provider);
-  //   console.log(tokenContract)
-  //   // const  _tokensMinted = await tokenContract.totalSupply();
-  //   // setTotalTokensMinted(_tokensMinted);
-  //   const _tokensMinted = await tokenContract.totalSupply();
-  //   setTotalTokensMinted(_tokensMinted);
+  const getTotalNumberOfTokensMinted = async()=>{
+    const provider = await getProviderOrSigner();
+    const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS,TOKEN_CONTRACT_ABI,provider);
+    const _totalTokensMinted = await tokenContract.totalSupply();
+    setTotalTokensMinted(_totalTokensMinted);
+  }
 
-  // }
+  
 
+
+  //gives the balance of tokens held by a particular account
   const getNoofTokensMinted = async()=>{
     try
     {
@@ -67,12 +68,14 @@ export default function Home() {
       setBalanceOfToken(0);
     }
   }
+
+
   const mintToken = async(amount)=>{
     try {
       const signer = await getProviderOrSigner(true);
-      const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS,TOKEN_CONTRACT_ABI.signer);
+      const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS,TOKEN_CONTRACT_ABI,signer);
       const value = 0.001 * amount;
-
+      // console.log(JSON.toString({tokenContract}));
 
       const tx = await tokenContract.publicMint(amount,{
         value:utils.parseEther(value.toString())
@@ -82,7 +85,8 @@ export default function Home() {
       setLoading(false);
       window.alert("The token has been succesfully minted");
       await getNoofTokensMinted();
-    } catch (error) {
+      // await getTotalNoOfTokensMinted();
+    }catch (error) {
       console.log(error)
     }
   }
@@ -98,6 +102,12 @@ export default function Home() {
   }
 
   const renderButton = ()=>{
+    if(loading){
+      return(
+      <div>
+        <button className={styles.button}>Loading.....</button>
+      </div>)
+    }
     return(
       <div  style={{display:"flex-col"}}>
         <div>
@@ -128,7 +138,7 @@ export default function Home() {
       })
       connectWallet();
     }
-    // getNoOfTokensMinted();
+    
   }, []);
 
 
@@ -141,13 +151,13 @@ export default function Home() {
       <div className={styles.main}>
         <div>
           <h1 className={styles.title}>Nishchaya's ICO</h1>
-          <div classname={styles.description}>
+          <div className={styles.description}>
             A Platform for you to mint and claim tokens in exchnage of my NFT collection
           </div>
           {walletConnected ? (
             <div>
               <div className={styles.description}>
-                {totalTokensMinted} tokens have been minted
+                {utils.formatEther(totalTokensMinted)} tokens have been minted worldwide
               </div>
               <div>
               {renderButton()}
