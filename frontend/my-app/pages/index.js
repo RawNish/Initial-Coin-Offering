@@ -16,7 +16,8 @@ export default function Home() {
   const[totalTokensMinted,setTotalTokensMinted]= useState(0);
   const[tokenAmount,setTokenAmount] = useState(0);
   const[balanceOfToken ,setBalanceOfToken] =useState(0);
-  const[loading,setLoading] = useState(true);
+  const[isOwner,setIsOwner] = useState(false);
+  const[loading,setLoading] = useState(false);
   const web3ModalRef=useRef();
 
   const getProviderOrSigner = async(needSigner=false)=>{
@@ -86,8 +87,26 @@ export default function Home() {
       window.alert("The token has been succesfully minted");
       await getNoofTokensMinted();
       // await getTotalNoOfTokensMinted();
+      await getOwner();
     }catch (error) {
       console.log(error)
+    }
+  }
+
+  const getOwner = async()=>{
+    try{
+      const provider = await getProviderOrSigner();
+      const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS,TOKEN_CONTRACT_ABI,provider);
+      const _owner = tokenContract.owner();
+      const signer = await getProviderOrSigner(true);
+      const address= signer.getAddress();
+      if(address == _owner){
+        setIsOwner(true);
+      }
+      console.log(isOwner);
+    }
+    catch(err){
+      console.log(err);
     }
   }
 
@@ -138,6 +157,7 @@ export default function Home() {
       })
       connectWallet();
     }
+    getOwner();
     
   }, []);
 
