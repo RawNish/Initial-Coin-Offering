@@ -30,12 +30,12 @@ export default function Home() {
     const web3Provider = new ethers.providers.Web3Provider(provider);
 
      const {chainId} = await web3Provider.getNetwork();
-     console.log(chainId);
+    //  console.log(chainId);
      if(chainId!=4){
       window.alert("Change the network to rinkeby");
 
      }
-     console.log(chainId);
+    //  console.log(chainId);
      const signer  = web3Provider.getSigner();
      if(needSigner==true){
       return signer;
@@ -57,21 +57,46 @@ export default function Home() {
 
 
   //gives the balance of tokens held by a particular account
-  const getNoofTokensMinted = async()=>{
-    try
-    {
-    const provider = getProviderOrSigner();
-    const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS,TOKEN_CONTRACT_ABI,provider);
-    const signer =await  getProviderOrSigner(true);
-    const address = await signer.getAddress();
-    const balance = await tokenContract.balanceOf(address);
-    setBalanceOfToken(balance);
-    }catch(err){
-      console.log(err);
-      setBalanceOfToken(0);
-    }
-  }
+  // const getNoofTokensMintedForUser = async()=>{
+  //   try
+  //   {
+  //   const provider =  await getProviderOrSigner();
+  //   const tokenContract = new Contract(NFT_TOKEN_ADDRESS,NFT_TOKEN_ABI,provider);
+   
+  //   const signer = await getProviderOrSigner(true);
+  //   const address = signer.getAddress();
+  //   const balance = tokenContract.balanceOf(address);
+  //   setBalanceOfToken(balance);
+  //   }catch(err){
+  //     console.log(err);
+  //     setBalanceOfToken(0);
+  //   }
+  // }
 
+
+  const getBalanceOfTokens = async () => {
+    try {
+      // Get the provider from web3Modal, which in our case is MetaMask
+      // No need for the Signer here, as we are only reading state from the blockchain
+      const provider = await getProviderOrSigner();
+      // Create an instace of token contract
+      const tokenContract = new Contract(
+        TOKEN_CONTRACT_ADDRESS,
+        TOKEN_CONTRACT_ABI,
+        provider
+      );
+      const signer= await getProviderOrSigner(true);
+      const address= await signer.getAddress();
+      const {_hex} = await tokenContract.balanceOf(address);
+      
+      
+      const tokensMinted = (parseInt(_hex,16)/10**18);
+      setBalanceOfToken(tokensMinted);
+    } catch (err) {
+      console.error(err);
+      setBalanceOfToken(zero);
+    }
+  };
 
   const mintToken = async(amount)=>{
     try {
@@ -87,8 +112,8 @@ export default function Home() {
       await tx.wait();
       setLoading(false);
       window.alert("The token has been succesfully minted");
-      await getNoofTokensMinted();
-      // await getTotalNoOfTokensMinted();
+      // await getBalanceOfTokens();
+      await getTotalNoOfTokensMinted();
       // await getOwner();
     }catch (error) {
       console.log(error)
@@ -159,8 +184,10 @@ export default function Home() {
         disableInjectedProvider:false
       })
       connectWallet();
+      getTotalNumberOfTokensMinted();
+      getBalanceOfTokens();
     }
-    getOwner();
+    
     
   }, []);
 
@@ -179,6 +206,10 @@ export default function Home() {
           </div>
           {walletConnected ? (
             <div>
+              <div className={styles.description}>
+                You have minted {balanceOfToken} tokens in total
+
+              </div> 
               <div className={styles.description}>
                 {utils.formatEther(totalTokensMinted)} tokens have been minted worldwide
               </div>
