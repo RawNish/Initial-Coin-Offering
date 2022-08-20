@@ -17,7 +17,7 @@ export default function Home() {
   const[tokenAmount,setTokenAmount] = useState(0);
   const[tokensToBeClaimed,setTokensToBeClaimed] = useState(0);
   const[balanceOfToken ,setBalanceOfToken] =useState(0);
-  // const[isOwner,setIsOwner] = useState(false);
+  const[isOwner,setIsOwner] = useState(false);
 
   const[loading,setLoading] = useState(false);
   const web3ModalRef=useRef();
@@ -96,15 +96,11 @@ export default function Home() {
       const signer = await getProviderOrSigner(true);
       const address = await signer.getAddress();
       const balance = await nftContract.balanceOf(address);
-      // balance is a Big number and thus we would compare it with Big number `zero`
       if (balance === zero) {
         setTokensToBeClaimed(zero);
       } else {
-        // amount keeps track of the number of unclaimed tokens
         var amount = 0;
-        // For all the NFT's, check if the tokens have already been claimed
-        // Only increase the amount if the tokens have not been claimed
-        // for a an NFT(for a given tokenId)
+        
         for (var i = 0; i < balance; i++) {
           const tokenId = await nftContract.tokenOfOwnerByIndex(address, i);
           const claimed = await tokenContract.tokenIdsClaimed(tokenId);
@@ -112,8 +108,7 @@ export default function Home() {
             amount++;
           }
         }
-        //tokensToBeClaimed has been initialized to a Big Number, thus we would convert amount
-        // to a big number and then set its value
+        console.log(amount);
         setTokensToBeClaimed(BigNumber.from(amount));
       }
     } catch (err) {
@@ -187,23 +182,23 @@ export default function Home() {
     }
   }
 
-  // const getOwner = async()=>{
-  //   try{
-  //     const provider = await getProviderOrSigner();
-  //     const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS,TOKEN_CONTRACT_ABI,provider);
-  //     const _owner = tokenContract.owner();
-  //     const signer = await getProviderOrSigner(true);
-  //     const address= signer.getAddress();
-  //     console.log(address);
-  //     if(address == _owner){
-  //       setIsOwner(true);
-  //     }
-  //     console.log(isOwner);
-  //   }
-  //   catch(err){
-  //     console.log(err);
-  //   }
-  // }
+  const getOwner = async()=>{
+    try{
+      const provider = await getProviderOrSigner();
+      const tokenContract = new Contract(TOKEN_CONTRACT_ADDRESS,TOKEN_CONTRACT_ABI,provider);
+      const _owner = tokenContract.owner();
+      const signer = await getProviderOrSigner(true);
+      const address= signer.getAddress();
+      console.log(address);
+      if(address == _owner){
+        setIsOwner(true);
+      }
+      console.log(isOwner);
+    }
+    catch(err){
+      console.log(err);
+    }
+  }
 
   const withdrawCoins = async () => {
     try {
@@ -241,6 +236,15 @@ export default function Home() {
       <div>
         <button className={styles.button}>Loading.....</button>
       </div>)
+    }
+    if(walletConnected && isOwner){
+      return(
+        <div>
+          <button className={styles.button} onClick={withdrawCoins}>
+            Withdraw Coins
+          </button>
+        </div>
+      )
     }
     if (tokensToBeClaimed > 0) {
       return (
@@ -289,6 +293,8 @@ export default function Home() {
       getBalanceOfTokens();
     }
   }, [walletConnected]);
+  
+
 
 
   return (
@@ -326,3 +332,9 @@ export default function Home() {
     </div>
   )
 }
+
+
+
+
+
+
