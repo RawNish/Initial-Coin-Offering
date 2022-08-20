@@ -53,9 +53,76 @@ export default function Home() {
     setTotalTokensMinted(_totalTokensMinted);
   }
 
+  const claimCryptoDevTokens = async () => {
+    try {
+      
+      const signer = await getProviderOrSigner(true);
+      
+      const tokenContract = new Contract(
+        TOKEN_CONTRACT_ADDRESS,
+        TOKEN_CONTRACT_ABI,
+        signer
+      );
+      const tx = await tokenContract.claim();
+      setLoading(true);
+      
+      await tx.wait();
+      setLoading(false);
+      window.alert("Sucessfully claimed Crypto Dev Tokens");
+      await getBalanceOfCryptoDevTokens();
+      await getTotalTokensMinted();
+      await getTokensToBeClaimed();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const getTokensToBeClaimed = async () => {
+    try {
+      
+      const provider = await getProviderOrSigner();
+     
+      const nftContract = new Contract(
+        NFT_CONTRACT_ADDRESS,
+        NFT_CONTRACT_ABI,
+        provider
+      );
+      
+      const tokenContract = new Contract(
+        TOKEN_CONTRACT_ADDRESS,
+        TOKEN_CONTRACT_ABI,
+        provider
+      );
+      const signer = await getProviderOrSigner(true);
+      const address = await signer.getAddress();
+      const balance = await nftContract.balanceOf(address);
+      // balance is a Big number and thus we would compare it with Big number `zero`
+      if (balance === zero) {
+        setTokensToBeClaimed(zero);
+      } else {
+        // amount keeps track of the number of unclaimed tokens
+        var amount = 0;
+        // For all the NFT's, check if the tokens have already been claimed
+        // Only increase the amount if the tokens have not been claimed
+        // for a an NFT(for a given tokenId)
+        for (var i = 0; i < balance; i++) {
+          const tokenId = await nftContract.tokenOfOwnerByIndex(address, i);
+          const claimed = await tokenContract.tokenIdsClaimed(tokenId);
+          if (!claimed) {
+            amount++;
+          }
+        }
+        //tokensToBeClaimed has been initialized to a Big Number, thus we would convert amount
+        // to a big number and then set its value
+        setTokensToBeClaimed(BigNumber.from(amount));
+      }
+    } catch (err) {
+      console.error(err);
+      setTokensToBeClaimed(0);
+    }
+  };
+
   
-
-
   //gives the balance of tokens held by a particular account
   // const getNoofTokensMintedForUser = async()=>{
   //   try
@@ -76,10 +143,9 @@ export default function Home() {
 
   const getBalanceOfTokens = async () => {
     try {
-      // Get the provider from web3Modal, which in our case is MetaMask
-      // No need for the Signer here, as we are only reading state from the blockchain
+      
       const provider = await getProviderOrSigner();
-      // Create an instace of token contract
+      
       const tokenContract = new Contract(
         TOKEN_CONTRACT_ADDRESS,
         TOKEN_CONTRACT_ABI,
@@ -114,6 +180,7 @@ export default function Home() {
       window.alert("The token has been succesfully minted");
       // await getBalanceOfTokens();
       await getTotalNoOfTokensMinted();
+      await getBalanceOfTokens();
       // await getOwner();
     }catch (error) {
       console.log(error)
@@ -138,6 +205,26 @@ export default function Home() {
   //   }
   // }
 
+  const withdrawCoins = async () => {
+    try {
+      const signer = await getProviderOrSigner(true);
+      const tokenContract = new Contract(
+        TOKEN_CONTRACT_ADDRESS,
+        TOKEN_CONTRACT_ABI,
+        signer
+      );
+
+      const tx = await tokenContract.withdraw();
+      setLoading(true);
+      await tx.wait();
+      setLoading(false);
+      await getOwner();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+
   const connectWallet =async()=>{
     console.log("message")
     try{
@@ -154,6 +241,18 @@ export default function Home() {
       <div>
         <button className={styles.button}>Loading.....</button>
       </div>)
+    }
+    if (tokensToBeClaimed > 0) {
+      return (
+        <div>
+          <div className={styles.description}>
+            {tokensToBeClaimed * 10} Tokens can be claimed!
+          </div>
+          <button className={styles.button} onClick={claimCryptoDevTokens}>
+            Claim Tokens
+          </button>
+        </div>
+      );
     }
     return(
       <div  style={{display:"flex-col"}}>
@@ -184,12 +283,12 @@ export default function Home() {
         disableInjectedProvider:false
       })
       connectWallet();
+      getTokensToBeClaimed();
+      withdrawCoins();
       getTotalNumberOfTokensMinted();
       getBalanceOfTokens();
     }
-    
-    
-  }, []);
+  }, [walletConnected]);
 
 
   return (
